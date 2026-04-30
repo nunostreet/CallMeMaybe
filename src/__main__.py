@@ -1,5 +1,9 @@
 import argparse
+from pathlib import Path
+from llm_sdk import Small_LLM_Model
 from .parser import load_functions, load_prompts
+from .generator import generate, load_vocab
+from .output import write_json_file
 
 
 def main() -> None:
@@ -24,7 +28,22 @@ def main() -> None:
     functions = load_functions(args.functions_definition)
     prompts = load_prompts(args.input)
 
-    print(f"Loaded {len(functions)} functions and {len(prompts)} prompts.")
+    model = Small_LLM_Model()
+    vocab = load_vocab(model)
+
+    results = []
+    for i, prompt_request in enumerate(prompts, 1):
+        print(f"[{i}/{len(prompts)}] {prompt_request.prompt[:50]}...")
+        try:
+            function_call = generate(
+                model, vocab, prompt_request.prompt, functions
+                )
+            results.append(function_call.model_dump())
+        except Exception as e:
+            print(f"Error processing prompt '{prompt_request.prompt}': {e}")
+
+    write_json_file(results, Path(args.output))
+    print(f"Written {len(results)} results to {args.output}")
 
 
 if __name__ == "__main__":
