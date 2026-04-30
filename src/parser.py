@@ -1,3 +1,4 @@
+"""Load and validate input files for function definitions and user prompts."""
 import json
 from pathlib import Path
 from pydantic import ValidationError
@@ -5,7 +6,7 @@ from .schema import PromptRequest, FunctionSpec
 
 
 def _load_json_file(path: str | Path) -> object:
-
+    """Read a JSON file and return its parsed content."""
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Input file not found: {path}")
@@ -18,7 +19,7 @@ def _load_json_file(path: str | Path) -> object:
 
 
 def load_prompts(path: str | Path) -> list[PromptRequest]:
-
+    """Load a list of user prompts from a JSON file and validate each entry."""
     raw_data = _load_json_file(path)
 
     if not isinstance(raw_data, list):
@@ -33,7 +34,7 @@ def load_prompts(path: str | Path) -> list[PromptRequest]:
 
 
 def load_functions(path: str | Path) -> list[FunctionSpec]:
-
+    """Load function definitions from a JSON file and validate each entry."""
     raw_data = _load_json_file(path)
 
     if not isinstance(raw_data, list):
