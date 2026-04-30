@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from llm_sdk import Small_LLM_Model
+from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
 from .parser import load_functions, load_prompts
 from .generator import generate, load_vocab
 from .output import write_json_file
@@ -23,20 +23,33 @@ def main() -> None:
         "--output",
         default="data/output/function_calling_results.json",
     )
+    parser.add_argument(
+        "--model",
+        default="Qwen/Qwen3-0.6B",
+        help="HuggingFace model identifier (default: Qwen/Qwen3-0.6B)",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print token-by-token generation for each prompt",
+    )
     args = parser.parse_args()
 
     functions = load_functions(args.functions_definition)
     prompts = load_prompts(args.input)
 
-    model = Small_LLM_Model()
+    model = Small_LLM_Model(model_name=args.model)
     vocab = load_vocab(model)
+    prefix_ids = model.encode('{"name":"').tolist()[0]
 
     results = []
     for i, prompt_request in enumerate(prompts, 1):
         print(f"[{i}/{len(prompts)}] {prompt_request.prompt[:50]}...")
         try:
             function_call = generate(
-                model, vocab, prompt_request.prompt, functions
+                model, vocab, prompt_request.prompt, functions,
+                verbose=args.verbose,
+                prefix_ids=prefix_ids,
                 )
             results.append(function_call.model_dump())
         except Exception as e:
