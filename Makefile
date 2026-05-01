@@ -56,12 +56,12 @@ debug:
 		--output $(DEFAULT_OUTPUT)
 
 test:
-	$(UV_ENV) $(PYTEST) -q
+	$(UV_ENV) $(PYTEST) $(ARGS)
 
 clean:
 	rm -rf .pytest_cache .mypy_cache
-	find src -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find src -type f -name "*.pyc" -delete 2>/dev/null || true
+	find src tests -name "__pycache__" -prune -exec rm -rf {} + 2>/dev/null || true
+	find src tests -name "*.pyc" -delete 2>/dev/null || true
 	rm -f $(DEFAULT_OUTPUT)
 
 lint:

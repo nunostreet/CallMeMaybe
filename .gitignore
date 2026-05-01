@@ -10,5 +10,3 @@ __pycache__/
 venv/
 
 data/output/
-
-tests/
