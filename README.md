@@ -96,10 +96,10 @@ This guarantees a valid function name in every case, regardless of what the mode
 
 **Prompt format shapes string quality.** The `regex` parameter uses a code-completion format (`# comment\npattern = "`) which consistently produces better regex syntax than an instruction format, because the model has seen this pattern in training data.
 
-**Post-processing for common model errors.** Three lightweight fixups handle systematic model failures without changing the generation strategy:
+**Post-processing for common model errors.** Two lightweight fixups handle systematic model failures without changing the generation strategy:
 - Repeated character collapse: `"****"` → `"*"`.
 - Unclosed parenthesis removal: `"([0-9]+"` → `"[0-9]+"`.
-- Word boundary injection: bare alphanumeric patterns like `cat` become `\bcat\b`.
+
 
 ---
 
@@ -122,8 +122,6 @@ This guarantees a valid function name in every case, regardless of what the mode
 **String generation without a stopping signal.** Early attempts masked the `"` token to prevent premature stopping, which caused the model to generate garbage for all 80 steps. The fix was the opposite: stop immediately when the model emits any token containing `"`, treating it as a natural end-of-string signal.
 
 **Replacement strings in uppercase.** For prompts like *"replace numbers with NUMBERS"*, the model generated the replacement character by character instead of the full word. Solved by extracting uppercase words directly from the prompt with `re.search(r'\bwith\s+([A-Z][A-Z]+)\b', ...)`.
-
-**Word boundaries in regex generation.** The model generates `cat` instead of `\bcat\b` for word-match patterns. Solved with post-processing: if the generated pattern is purely alphanumeric, wrap it in `\b...\b`.
 
 ---
 

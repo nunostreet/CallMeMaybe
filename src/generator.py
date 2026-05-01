@@ -187,12 +187,13 @@ def _extract_string(
     The prompt format is chosen based on the parameter name to steer the model:
     - regex/pattern: code-completion format to produce valid regex syntax.
     - replacement: extracted from the prompt if uppercase, otherwise generated.
-
     - other strings: a short instruction prompt followed by completion.
 
     Generation stops as soon as the model emits a token containing a quote.
     """
+
     if param_name in ("regex", "pattern"):
+        # Code-completion format steers the model toward valid regex syntax.
         prompt = f"# {user_prompt}\n{param_name} = \""
     elif param_name == "replacement":
         match = re.search(r'\bwith\s+([A-Z][A-Z]+)\b', user_prompt)
@@ -211,6 +212,8 @@ def _extract_string(
             f'Function {fn_name} needs string argument "{param_name}".\n'
             f'{param_name} = "'
         )
+
+    # --- greedy decoding: pick argmax token by token until a quote appears ---
 
     input_ids = model.encode(prompt).tolist()[0]
     generated_ids = []
@@ -234,9 +237,11 @@ def _extract_string(
 
     result: str = model.decode(generated_ids)
 
+    # The model sometimes repeats the same character (e.g. "**" instead of "*")
     if len(result) > 1 and len(set(result)) == 1:
         result = result[0]
 
+    # The model sometimes opens a group "([0-9]+" without closing it
     if result.startswith("(") and result.count("(") > result.count(")"):
         result = result[1:]
 
