@@ -106,8 +106,11 @@ def extract_arguments(
         print("  [argument extraction]")
 
     for param_name, param_spec in function.parameters.items():
-        if param_spec.type == "number":
-            value = float(numbers[number_idx])
+        if param_spec.type == "number" or param_spec.type == "integer":
+            if param_spec.type == "number":
+                value = float(numbers[number_idx])
+            else:
+                value = int(numbers[number_idx])
             result[param_name] = value
             number_idx += 1
             if verbose:
@@ -191,6 +194,7 @@ def _extract_string(
 
     Generation stops as soon as the model emits a token containing a quote.
     """
+    prompt = user_prompt
 
     if param_name in ("regex", "pattern"):
         # Code-completion format steers the model toward valid regex syntax.
@@ -206,6 +210,24 @@ def _extract_string(
             f'User said: "{user_prompt}"\n'
             f'What exact string should replace each match? {param_name} = "'
         )
+    elif param_name == "path":
+        match = re.search(r'([A-Za-z]:\\[\w\\./:-]+|/[\w./:-]+)', user_prompt)
+        if match:
+            extracted = match.group(1)
+            if verbose:
+                print(f"    {param_name} = {extracted!r}  (from prompt)")
+            return extracted
+        prompt = (
+            f'User said: "{user_prompt}"\n'
+            f'What path is he referring to in the prompt? {param_name} = "'
+        )
+    elif param_name == "template":
+        match = re.search(r'[Ff]ormat\s+template:\s*(.+)', user_prompt)
+        if match:
+            extracted = match.group(1)
+            if verbose:
+                print(f"    {param_name} = {extracted!r}  (from prompt)")
+            return extracted
     else:
         prompt = (
             f'User said: "{user_prompt}"\n'
@@ -217,6 +239,7 @@ def _extract_string(
 
     input_ids = model.encode(prompt).tolist()[0]
     generated_ids = []
+    token_str = ""
 
     if verbose:
         print(f"    {param_name} = \"", end="", flush=True)
@@ -236,6 +259,10 @@ def _extract_string(
         print('"')
 
     result: str = model.decode(generated_ids)
+    if token_str:
+        part = token_str[:token_str.index('"')]
+        if part:
+            result += part
 
     # The model sometimes repeats the same character (e.g. "**" instead of "*")
     if len(result) > 1 and len(set(result)) == 1:
