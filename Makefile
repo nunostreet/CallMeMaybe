@@ -65,7 +65,7 @@ clean:
 	rm -f $(DEFAULT_OUTPUT)
 
 lint:
-	$(UV_ENV) $(UV) run flake8 . --exclude=.venv,llm_sdk,tests
+	$(UV_ENV) $(UV) run flake8 . --exclude=.venv,llm_sdk,tests,moulinette
 	$(UV_ENV) $(UV) run mypy . \
 		--warn-return-any \
 		--warn-unused-ignores \
@@ -74,11 +74,13 @@ lint:
 		--check-untyped-defs \
 		--exclude llm_sdk \
 		--exclude .venv \
+		--exclude moulinette \
 		--exclude tests
 
 lint-strict:
-	$(UV_ENV) $(UV) run flake8 . --exclude=.venv,llm_sdk,tests
+	$(UV_ENV) $(UV) run flake8 . --exclude=.venv,llm_sdk,tests,moulinette
 	$(UV_ENV) $(UV) run mypy . --strict \
 		--exclude llm_sdk \
 		--exclude .venv \
+		--exclude moulinette \
 		--exclude tests

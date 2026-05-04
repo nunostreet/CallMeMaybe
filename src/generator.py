@@ -235,7 +235,7 @@ def _extract_string(
             f'{param_name} = "'
         )
 
-    # --- greedy decoding: pick argmax token by token until a quote appears ---
+    # greedy decoding: pick argmax token by token until a quote appears ---
 
     input_ids = model.encode(prompt).tolist()[0]
     generated_ids = []
