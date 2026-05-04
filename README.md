@@ -140,6 +140,10 @@ The model is mocked in unit tests using `unittest.mock.MagicMock`, injected via 
 
 ## Bonus Features
 
+### ✓ Vocabulary-based tokenizer
+
+Instead of calling `encode`/`decode` for token inspection, the vocabulary is built once at startup by reading the tokenizer file directly via `get_path_to_tokenizer_file()` and parsing it into a `{token_id: token_str}` dictionary. This makes constrained decoding efficient — token filtering is O(1) lookups in memory rather than repeated SDK calls across the full vocabulary (~150k tokens) at every generation step.
+
 ### ✓ Multiple LLM model support
 
 Any HuggingFace causal LM can be used by passing `--model`:
