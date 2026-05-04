@@ -249,20 +249,25 @@ def _extract_string(
         next_token = int(np.argmax(logits))
         token_str = vocab[next_token]
         if '"' in token_str:
+            part = token_str[:token_str.index('"')]
+            if part:
+                if verbose:
+                    print(part, end="", flush=True)
+                result_suffix = part
+            else:
+                result_suffix = ""
             break
         generated_ids.append(next_token)
         input_ids.append(next_token)
         if verbose:
             print(token_str, end="", flush=True)
+    else:
+        result_suffix = ""
 
     if verbose:
         print('"')
 
-    result: str = model.decode(generated_ids)
-    if token_str:
-        part = token_str[:token_str.index('"')]
-        if part:
-            result += part
+    result: str = model.decode(generated_ids) + result_suffix
 
     # The model sometimes repeats the same character (e.g. "**" instead of "*")
     if len(result) > 1 and len(set(result)) == 1:
