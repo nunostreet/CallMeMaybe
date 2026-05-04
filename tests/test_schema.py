@@ -27,7 +27,8 @@ class TestPromptRequest:
     def test_extra_fields_rejected(self):
         """extra='forbid' in CheckModel blocks unknown fields."""
         with pytest.raises(ValidationError):
-            PromptRequest.model_validate({"prompt": "hello", "unexpected": "field"})
+            PromptRequest.model_validate(
+                {"prompt": "hello", "unexpected": "field"})
 
     def test_missing_prompt_rejected(self):
         """The prompt field is required — omitting it raises an error."""
