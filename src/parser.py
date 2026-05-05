@@ -14,7 +14,7 @@ def _load_json_file(path: str | Path) -> object:
         with path.open("r", encoding="utf-8") as file:
             return json.load(file)
     except json.JSONDecodeError as exc:
-        raise ValueError(f"Invalid JSON in file: {path}") from exc
+        raise ValueError(f"Invalid JSON in file: {path} (line {exc.lineno}, col {exc.colno})") from exc
 
 
 def load_prompts(path: str | Path) -> list[PromptRequest]:
@@ -24,12 +24,13 @@ def load_prompts(path: str | Path) -> list[PromptRequest]:
     if not isinstance(raw_data, list):
         raise ValueError("Prompt must be in a valid JSON format.")
 
-    try:
-        return [PromptRequest.model_validate(item) for item in raw_data]
-    except ValidationError as exc:
-        raise ValueError(
-            "Prompt items do not match the expected schema."
-        ) from exc
+    valid = []
+    for i, item in enumerate(raw_data):
+        try:
+            valid.append(PromptRequest.model_validate(item))
+        except ValidationError as exc:
+            print(f"Skipping invalid prompt at index {i}: {exc.errors()[0]['msg']} ({item!r})")
+    return valid
 
 
 def load_functions(path: str | Path) -> list[FunctionSpec]:
