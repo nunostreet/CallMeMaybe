@@ -114,6 +114,11 @@ def extract_arguments(
 
     for param_name, param_spec in function.parameters.items():
         if param_spec.type == "number" or param_spec.type == "integer":
+            if number_idx >= len(numbers):
+                raise ValueError(
+                    f"Could not extract numeric argument '{param_name}' for function "
+                    f"'{function.name}': no numbers found in prompt {user_prompt!r}"
+                )
             if param_spec.type == "number":
                 value = float(numbers[number_idx])
             else:
