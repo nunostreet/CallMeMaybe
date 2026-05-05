@@ -14,7 +14,10 @@ def _load_json_file(path: str | Path) -> object:
         with path.open("r", encoding="utf-8") as file:
             return json.load(file)
     except json.JSONDecodeError as exc:
-        raise ValueError(f"Invalid JSON in file: {path} (line {exc.lineno}, col {exc.colno})") from exc
+        raise ValueError(
+            f"Invalid JSON in file: {path}"
+            f" (line {exc.lineno}, col {exc.colno})"
+        ) from exc
 
 
 def load_prompts(path: str | Path) -> list[PromptRequest]:
@@ -29,7 +32,10 @@ def load_prompts(path: str | Path) -> list[PromptRequest]:
         try:
             valid.append(PromptRequest.model_validate(item))
         except ValidationError as exc:
-            print(f"Skipping invalid prompt at index {i}: {exc.errors()[0]['msg']} ({item!r})")
+            print(
+                f"Skipping invalid prompt at index {i}:"
+                f" {exc.errors()[0]['msg']} ({item!r})"
+            )
     return valid
 
 
