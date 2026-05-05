@@ -18,6 +18,7 @@ from src.generator import (
     _build_prompt,
     generate_constrained,
     extract_arguments,
+    _extract_string,
 )
 
 
@@ -197,3 +198,55 @@ class TestExtractArguments:
         )
         assert result["a"] == -5.0
         assert result["b"] == 10.0
+
+
+class TestExtractStringSpecialParams:
+    """_extract_string extracts path and template directly from the prompt."""
+
+    def test_unix_path_extracted_from_prompt(self, mock_model):
+        """Unix paths are extracted by regex without calling the model."""
+        result = _extract_string(
+            mock_model, {}, "Read the file at /home/user/data.json with utf-8 encoding",
+            "fn_read_file", "path",
+        )
+        assert result == "/home/user/data.json"
+
+    def test_windows_path_extracted_from_prompt(self, mock_model):
+        """Windows paths are extracted by regex without calling the model."""
+        result = _extract_string(
+            mock_model, {}, r"Read C:\Users\john\config.ini with latin-1 encoding",
+            "fn_read_file", "path",
+        )
+        assert result == r"C:\Users\john\config.ini"
+
+    def test_template_extracted_from_prompt(self, mock_model):
+        """Template content after 'Format template:' is extracted directly."""
+        result = _extract_string(
+            mock_model, {}, "Format template: Hello {user}'s profile!",
+            "fn_format_template", "template",
+        )
+        assert result == "Hello {user}'s profile!"
+
+    def test_template_with_embedded_quotes(self, mock_model):
+        """Templates containing double quotes are extracted without truncation."""
+        result = _extract_string(
+            mock_model, {}, 'Format template: Say "hello" to {name}',
+            "fn_format_template", "template",
+        )
+        assert result == 'Say "hello" to {name}'
+
+    def test_path_extraction_does_not_call_model(self, mock_model):
+        """Model generation is never triggered when path is in the prompt."""
+        _extract_string(
+            mock_model, {}, "Read /tmp/file.txt with utf-8",
+            "fn_read_file", "path",
+        )
+        mock_model.get_logits_from_input_ids.assert_not_called()
+
+    def test_template_extraction_does_not_call_model(self, mock_model):
+        """Model generation is never triggered when template is in the prompt."""
+        _extract_string(
+            mock_model, {}, "Format template: Hello world",
+            "fn_format_template", "template",
+        )
+        mock_model.get_logits_from_input_ids.assert_not_called()
