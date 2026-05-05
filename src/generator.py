@@ -18,6 +18,7 @@ def generate_constrained(
     input_ids: list[int],
     valid_token_ids: list[int],
     verbose: bool = False,
+    vocab: dict[int, str] | None = None,
 ) -> int:
     """Return the highest-logit token ID among valid_token_ids.
 
@@ -30,7 +31,11 @@ def generate_constrained(
         mask[token_id] = logits[token_id]
     chosen = int(np.argmax(mask))
     if verbose:
-        print(f"    candidates: {len(valid_token_ids)}  chosen id: {chosen}")
+        chosen_str = vocab[chosen] if vocab is not None else str(chosen)
+        print(
+            f"    candidates: {len(valid_token_ids)}"
+            f"  chosen: {chosen_str!r} (id {chosen})"
+        )
     return chosen
 
 
@@ -68,7 +73,9 @@ def select_function(
                 f"Constrained decoding stuck: no valid tokens for prefix "
                 f"{generated_prefix!r}. Available functions: {fn_names}"
             )
-        next_token = generate_constrained(model, input_ids, valid)
+        next_token = generate_constrained(
+            model, input_ids, valid, verbose, vocab
+        )
         token_str = vocab[next_token]
         generated_prefix += token_str
         input_ids.append(next_token)
